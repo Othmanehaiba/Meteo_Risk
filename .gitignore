@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.log
+.pytest_cache/
+.streamlit/
+data/bronze/*
+data/silver/*
+data/gold/*
+!data/**/.gitkeep
+docs/dashboard_screenshots/*
+!docs/dashboard_screenshots/.gitkeep
