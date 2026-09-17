@@ -1,28 +1,36 @@
--- 1. Risque moyen par categorie
-SELECT risk_category, AVG(risk_score) AS average_risk
-FROM weather_risk
-GROUP BY risk_category
-ORDER BY average_risk DESC;
+-- Requête 1 : Villes avec les températures maximales les plus élevées
+SELECT nom_ville, MAX(temp_max) AS temp_maximale_atteinte
+FROM fact_previsions_risques
+GROUP BY nom_ville
+ORDER BY temp_maximale_atteinte DESC
+LIMIT 5;
 
--- 2. Livraisons les plus risquees
-SELECT * FROM weather_risk
-ORDER BY risk_score DESC
-LIMIT 20;
+-- Requête 2 : Villes avec les plus fortes précipitations cumulées
+SELECT nom_ville, SUM(precipitation) AS total_precipitations
+FROM fact_previsions_risques
+GROUP BY nom_ville
+ORDER BY total_precipitations DESC
+LIMIT 5;
 
--- 3. Risque moyen par jour
-SELECT delivery_date, AVG(risk_score) AS average_risk
-FROM weather_risk
-GROUP BY delivery_date
-ORDER BY delivery_date;
+-- Requête 3 : Villes présentant le score de risque moyen le plus élevé
+SELECT nom_ville, ROUND(AVG(risk_score)::numeric, 2) AS risque_moyen
+FROM fact_previsions_risques
+GROUP BY nom_ville
+ORDER BY risque_moyen DESC;
 
--- 4. Repartition des categories
-SELECT risk_category, COUNT(*) AS deliveries
-FROM weather_risk
-GROUP BY risk_category
-ORDER BY deliveries DESC;
+-- Requête 4 : Périodes (dates) présentant le risque maximal au niveau national
+SELECT date_prevision, ROUND(AVG(risk_score)::numeric, 2) AS risque_moyen_national, MAX(risk_score) AS risque_max_observe
+FROM fact_previsions_risques
+GROUP BY date_prevision
+ORDER BY risque_max_observe DESC;
 
--- 5. Score maximum par zone
-SELECT latitude, longitude, MAX(risk_score) AS maximum_risk
-FROM weather_risk
-GROUP BY latitude, longitude
-ORDER BY maximum_risk DESC;
+-- Requête 5 : Pour chaque ville, la journée à risque maximal (Top 1 par ville)
+WITH RankedRisks AS (
+    SELECT nom_ville, date_prevision, risk_score, risk_level,
+           ROW_NUMBER() OVER (PARTITION BY nom_ville ORDER BY risk_score DESC) as rank
+    FROM fact_previsions_risques
+)
+SELECT nom_ville, date_prevision, risk_score, risk_level
+FROM RankedRisks
+WHERE rank = 1
+ORDER BY risk_score DESC;
