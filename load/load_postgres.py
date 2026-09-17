@@ -30,12 +30,12 @@ def load_gold_to_postgres():
         connection.execute(text(schema_sql))
 
     # 2. Insertion / Mise à jour dans dim_villes
-    villes_df = df[['ville', 'region', 'lat', 'lng']].drop_duplicates()
+    villes_df = df[['ville', 'region', 'lat', 'lon']].drop_duplicates()
     with engine.begin() as connection:
         for _, row in villes_df.iterrows():
             sql = text("""
                 INSERT INTO dim_villes (nom_ville, region, latitude, longitude)
-                VALUES (:ville, :region, :lat, :lng)
+                VALUES (:ville, :region, :lat, :lon)
                 ON CONFLICT (nom_ville) DO UPDATE SET
                     region = EXCLUDED.region,
                     latitude = EXCLUDED.latitude,
@@ -45,7 +45,7 @@ def load_gold_to_postgres():
                 "ville": row['ville'],
                 "region": row['region'],
                 "lat": row['lat'],
-                "lng": row['lng']
+                "lon": row['lon']
             })
 
     # 3. Stratégie UPSERT pour fact_previsions_risques
