@@ -5,4 +5,4 @@ psycopg2-binary
 SQLAlchemy
 streamlit
 plotly
-apache-airflow
+apache-airflow==2.7.1

@@ -1,24 +1,22 @@
 import os
 import pandas as pd
-from sqlalchemy import create_engine
-import streamlit as st
+import psycopg2
 
-@st.cache_resource
-def get_connection():
-    # Variables d'environnement configurées pour PostgreSQL / Docker
+def load_data():
     user = os.getenv("POSTGRES_USER", "postgres")
     password = os.getenv("POSTGRES_PASSWORD", "postgres")
-    host = os.getenv("POSTGRES_HOST", "localhost")
+    host = os.getenv("POSTGRES_HOST", "postgres")
     port = os.getenv("POSTGRES_PORT", "5432")
     db = os.getenv("POSTGRES_DB", "meteorisk")
     
-    url = f"postgresql://{user}:{password}@{host}:{port}/{db}"
-    return create_engine(url)
-
-@st.cache_data(ttl=3600)
-def load_data():
-    """Charge l'ensemble des données de la table de faits pour Streamlit."""
-    engine = get_connection()
+    conn = psycopg2.connect(
+        host=host,
+        port=port,
+        dbname=db,
+        user=user,
+        password=password
+    )
+    
     query = """
         SELECT 
             f.nom_ville,
@@ -41,4 +39,7 @@ def load_data():
         LEFT JOIN dim_villes v ON f.nom_ville = v.nom_ville
         ORDER BY f.date_prevision ASC;
     """
-    return pd.read_sql(query, engine)
+    
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df
